@@ -9,11 +9,10 @@ from sensor_msgs.msg import Temperature, Imu
 from tf.transformations import quaternion_about_axis
 from mpu_6050_driver.registers import PWR_MGMT_1, ACCEL_XOUT_H, ACCEL_YOUT_H, ACCEL_ZOUT_H, TEMP_H,\
     GYRO_XOUT_H, GYRO_YOUT_H, GYRO_ZOUT_H
-ADDR = 0x68
 
-bus = smbus.SMBus(1)
-
-bus.write_byte_data(ADDR, PWR_MGMT_1, 0)
+ADDR = None
+bus = None
+IMU_FRAME = None
 
 # read_word and read_word_2c from http://blog.bitify.co.uk/2013/11/reading-data-from-mpu-6050-on-raspberry.html
 def read_word(adr):
@@ -31,7 +30,7 @@ def read_word_2c(adr):
 
 def publish_temp(timer_event):
     temp_msg = Temperature()
-    temp_msg.header.frame_id = 'imu_link'
+    temp_msg.header.frame_id = IMU_FRAME
     temp_msg.temperature = read_word_2c(TEMP_H)/340.0 + 36.53
     temp_msg.header.stamp = rospy.Time.now()
     temp_pub.publish(temp_msg)
@@ -39,7 +38,7 @@ def publish_temp(timer_event):
 
 def publish_imu(timer_event):
     imu_msg = Imu()
-    imu_msg.header.frame_id = 'imu_link'
+    imu_msg.header.frame_id = IMU_FRAME
 
     # Read the acceleration vals
     accel_x = read_word_2c(ACCEL_XOUT_H) / 16384.0
@@ -81,6 +80,15 @@ imu_pub = None
 
 if __name__ == '__main__':
     rospy.init_node('imu_node')
+
+    bus = smbus.SMBus(rospy.get_param('~bus', 1))
+    ADDR = rospy.get_param('~device_address', 0x68)
+    if type(ADDR) == str:
+        ADDR = int(ADDR, 16)
+
+    IMU_FRAME = rospy.get_param('~imu_frame', 'imu_link')
+
+    bus.write_byte_data(ADDR, PWR_MGMT_1, 0)
 
     temp_pub = rospy.Publisher('temperature', Temperature)
     imu_pub = rospy.Publisher('imu/data', Imu)
