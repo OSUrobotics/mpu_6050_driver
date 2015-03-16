@@ -7,8 +7,8 @@ import rospy
 import numpy as np
 from sensor_msgs.msg import Temperature, Imu
 from tf.transformations import quaternion_about_axis
-from mpu_6050_driver.registers import PWR_MGMT_1, ACCEL_XOUT_H, ACCEL_YOUT_H, ACCEL_ZOUT_H, TEMP_H
-
+from mpu_6050_driver.registers import PWR_MGMT_1, ACCEL_XOUT_H, ACCEL_YOUT_H, ACCEL_ZOUT_H, TEMP_H,\
+    GYRO_XOUT_H, GYRO_YOUT_H, GYRO_ZOUT_H
 ADDR = 0x68
 
 bus = smbus.SMBus(1)
